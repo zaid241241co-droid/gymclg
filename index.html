@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     
-    <!-- Supabase JS CDN Injection -->
+    <!-- Supabase JS CDN Loaded Correctly Once -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -159,7 +159,7 @@
         }
 
         .navbar.scrolled {
-            padding: 15px 8%;
+            padding: 15px 5%;
             background: rgba(8, 8, 8, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -1491,15 +1491,15 @@
                     <span class="fc-tag">Uncompromising Value</span>
                     <div class="fc-row">
                         <span class="fc-label">Monthly Entry</span>
-                        <span class="fc-price">I700<span>/mo</span></span>
+                        <span class="fc-price">₹700<span>/mo</span></span>
                     </div>
                     <div class="fc-row">
                         <span class="fc-label">Annual Pass</span>
-                        <span class="fc-price">I7,800<span>/yr</span></span>
+                        <span class="fc-price">₹7,800<span>/yr</span></span>
                     </div>
                     <div class="fc-row">
                         <span class="fc-label">Daily Walk-in</span>
-                        <span class="fc-price">I60<span>/day</span></span>
+                        <span class="fc-price">₹60<span>/day</span></span>
                     </div>
                 </div>
             </div>
@@ -1624,11 +1624,10 @@
                 <h2 class="section-title">Membership <span>Plans</span></h2>
                 <p class="section-subtitle">Unmatched affordability for premium training amenities. Find your optimal tier.</p>
             </div>
-            <!-- Populated dynamically via database query, fallbacks are included safely inside layout -->
             <div class="pricing-grid" id="pricingGrid">
                 <div class="pricing-card" data-plan-id="1">
                     <h3 class="plan-name">Daily Pass</h3>
-                    <div class="plan-price">I60<span>/Session</span></div>
+                    <div class="plan-price">₹60<span>/Session</span></div>
                     <ul class="plan-features">
                         <li class="feature-item">Full Equipment Floor Access</li>
                         <li class="feature-item">Lockers & Changing Areas</li>
@@ -1639,7 +1638,7 @@
                 <div class="pricing-card recommended" data-plan-id="2">
                     <span class="badge-recommended">Most Popular</span>
                     <h3 class="plan-name">Monthly Plan</h3>
-                    <div class="plan-price">I700<span>/Month</span></div>
+                    <div class="plan-price">₹700<span>/Month</span></div>
                     <ul class="plan-features">
                         <li class="feature-item">Unlimited Floor Entry Access</li>
                         <li class="feature-item">Access to Dedicated Ladies Hours</li>
@@ -1650,9 +1649,9 @@
                 </div>
                 <div class="pricing-card" data-plan-id="3">
                     <h3 class="plan-name">Annual Value</h3>
-                    <div class="plan-price">I7,800<span>/Year</span></div>
+                    <div class="plan-price">₹7,800<span>/Year</span></div>
                     <ul class="plan-features">
-                        <li class="feature-item">Equivalent to just I650 / Month</li>
+                        <li class="feature-item">Equivalent to just ₹650 / Month</li>
                         <li class="feature-item">Priority Facility Access Rights</li>
                         <li class="feature-item">All Structural Zones Unlocked</li>
                         <li class="feature-item">Fixed Rates Across 12 Months</li>
@@ -1737,7 +1736,7 @@
             <div class="testimonials-grid">
                 <div class="testimonial-card">
                     <div class="quote-icon">“</div>
-                    <p class="testimonial-text">"The lighting and mirror layout are stellar for tracking execution form. At I700 monthly, the facility surpasses gyms charging triple the rate."</p>
+                    <p class="testimonial-text">"The lighting and mirror layout are stellar for tracking execution form. At ₹700 monthly, the facility surpasses gyms charging triple the rate."</p>
                     <div class="testimonial-author">
                         <div class="author-info">
                             <h4>Rahul Sharma</h4>
@@ -1895,32 +1894,30 @@
         // -------------------------------------------------------------------------- */
         // SUPABASE CONNECTION INITIALIZATION                                         */
         // -------------------------------------------------------------------------- */
-        const SUPABASE_URL= "https://dnozjuccwccdmqarezkv.supabase.co";
+        const SUPABASE_URL = "https://dnozjuccwccdmqarezkv.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRub3pqdWNjd2NjZG1xYXJlemt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NDAwNzMsImV4cCI6MjEwMDExNjA3M30.WUajEaZrCJ3ZWVGOmVEHOUtdHIQoS3OyhIURJ3k3S_s"; 
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Single initialization safely attached
+        const supabaseClientInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         document.addEventListener('DOMContentLoaded', () => {
             
             // 1. Fetch Real-time Database Information from Supabase
             async function fetchDatabaseSettings() {
                 try {
-                    // Update Active Members counter dynamically from database table
-                    const { count: memberCount, error: memberError } = await supabase
+                    const { count: memberCount, error: memberError } = await supabaseClientInstance
                         .from('members')
                         .select('*', { count: 'exact', head: true });
                     
                     if (!memberError && memberCount !== null) {
-                        document.getElementById('stat-members').setAttribute('data-target', memberCount); // base fallback addition
+                        document.getElementById('stat-members').setAttribute('data-target', memberCount); 
                     }
 
-                    // Dynamically map membership configurations from the database if they exist
-                    const { data: plans, error: planError } = await supabase
+                    const { data: plans, error: planError } = await supabaseClientInstance
                         .from('membership_plans')
                         .select('*');
 
                     if (!planError && plans && plans.length > 0) {
-                        // Dynamically match costs based on fetched DB entries
                         plans.forEach(plan => {
                             const nameLower = plan.plan_name.toLowerCase();
                             const cards = document.querySelectorAll('.pricing-card');
@@ -1934,7 +1931,7 @@
                         });
                     }
                 } catch (err) {
-                    console.log("Supabase initialization/fetching skipped or incomplete. Using pre-configured UI fallbacks.", err);
+                    console.log("Supabase infrastructure skipped. Using fallbacks.", err);
                 }
             }
             fetchDatabaseSettings();
@@ -1977,7 +1974,7 @@
                 };
 
                 try {
-                    const { data, error } = await supabase
+                    const { data, error } = await supabaseClientInstance
                         .from('members')
                         .insert([submissionData])
                         .select();
