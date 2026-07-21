@@ -1994,6 +1994,7 @@
                         .eq('email', email);
 
                     if (mErr) throw mErr;
+                    
                     if (!members || members.length === 0) {
                         localStorage.removeItem(LOCAL_STORAGE_KEY);
                         return;
@@ -2002,20 +2003,50 @@
                     const member = members[0];
                     const memberId = member.id || member.member_id;
 
-                    // Parallel requests across tables
-                    const [planRes, trainerRes, workoutRes, attendanceRes, paymentRes] = await Promise.all([
-                        member.membership_id ? supabaseClientInstance.from('membership_plans').select('*').eq('membership_id', member.membership_id).maybeSingle() : Promise.resolve({ data: null }),
-                        member.trainer_id ? supabaseClientInstance.from('trainers').select('*').eq('trainer_id', member.trainer_id).maybeSingle() : Promise.resolve({ data: null }),
-                        supabaseClientInstance.from('workout_plans').select('*').eq('member_id', memberId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-                        supabaseClientInstance.from('attendance').select('*').eq('member_id', memberId).order('date', { ascending: false }),
-                        supabaseClientInstance.from('payments').select('*').eq('member_id', memberId).order('payment_date', { ascending: false })
-                    ]);
+                    // Safely query all linked secondary tables without forcing hard crash
+                    let plan = null, trainer = null, workout = null, attendance = null, payments = null;
 
-                    renderMemberDashboardUI(member, planRes.data, trainerRes.data, workoutRes.data, attendanceRes.data, paymentRes.data);
+                    try {
+                        if (member.membership_id) {
+                            const res = await supabaseClientInstance.from('membership_plans').select('*').eq('membership_id', member.membership_id).maybeSingle();
+                            plan = res.data;
+                        }
+                    } catch (e) { console.warn("Plan query skipped", e); }
+
+                    try {
+                        if (member.trainer_id) {
+                            const res = await supabaseClientInstance.from('trainers').select('*').eq('trainer_id', member.trainer_id).maybeSingle();
+                            trainer = res.data;
+                        }
+                    } catch (e) { console.warn("Trainer query skipped", e); }
+
+                    try {
+                        if (memberId) {
+                            const res = await supabaseClientInstance.from('workout_plans').select('*').eq('member_id', memberId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+                            workout = res.data;
+                        }
+                    } catch (e) { console.warn("Workout query skipped", e); }
+
+                    try {
+                        if (memberId) {
+                            const res = await supabaseClientInstance.from('attendance').select('*').eq('member_id', memberId).order('date', { ascending: false });
+                            attendance = res.data;
+                        }
+                    } catch (e) { console.warn("Attendance query skipped", e); }
+
+                    try {
+                        if (memberId) {
+                            const res = await supabaseClientInstance.from('payments').select('*').eq('member_id', memberId).order('payment_date', { ascending: false });
+                            payments = res.data;
+                        }
+                    } catch (e) { console.warn("Payments query skipped", e); }
+
+                    renderMemberDashboardUI(member, plan, trainer, workout, attendance, payments);
                 } catch (err) {
-                    console.error("Dashboard Aggregation Failure:", err);
-                    alert("System failed to aggregate database fields. Displaying fallback mock data configuration.");
-                    renderMemberDashboardUI({ full_name: "Active Member", status: "Active" }, null, null, null, null, null);
+                    console.error("Dashboard Aggregation Warning:", err);
+                    // Fallback to rendering basic profile info safely
+                    const fallbackMember = { full_name: "Valued Member", email: email, status: "Active" };
+                    renderMemberDashboardUI(fallbackMember, null, null, null, null, null);
                 }
             }
 
@@ -2047,7 +2078,7 @@
 
                 // Extract logic variables securely
                 const planName = plan ? plan.plan_name : (member.membership_id ? `Tier Layout ID: ${member.membership_id}` : "Standard Access Tier");
-                const trainerName = trainer ? trainer.name : "Floor Assistant Assigned";
+                const trainerName = trainer ? (trainer.name || trainer.full_name) : "Floor Assistant Assigned";
                 const routine = workout ? `${workout.routine_name || 'Custom Hybrid Program'} (${workout.difficulty_level || 'General'})` : "Dynamic Conditioning Routine A";
                 
                 let checkInStatus = "Not Tracked Today";
@@ -2164,17 +2195,30 @@
             const submitBtn = document.getElementById('submitBtn');
 
             document.addEventListener('click', (e) => {
-                if(e.target && e.target.classList.contains('open-booking')) {
-                    // Prevent entry if storage session matches completely
-                    if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
-                        alert("You already possess a live registered setup.");
+                const target = e.target;
+                if (target && (target.classList.contains('open-booking') || target.id === 'navActionBtn' || target.id === 'heroPrimaryBtn' || target.id === 'ctaPrimaryBtn')) {
+                    const activeEmail = localStorage.getItem(LOCAL_STORAGE_KEY);
+                    if (activeEmail) {
+                        // Agar already register ho chuka hai, seedha dashboard scroll hoga
+                        const targetSection = document.getElementById('membership');
+                        if (targetSection) {
+                            targetSection.scrollIntoView({ behavior: 'smooth' });
+                        }
                         return;
                     }
-                    const planName = e.target.getAttribute('data-plan');
-                    const planId = e.target.getAttribute('data-id');
-                    selectedPlanLabel.innerText = planName;
-                    formMembershipId.value = planId;
-                    bookingModal.classList.add('active');
+                    
+                    if (target.classList.contains('open-booking')) {
+                        const planName = target.getAttribute('data-plan') || "Monthly Plan";
+                        const planId = target.getAttribute('data-id') || "2";
+                        selectedPlanLabel.innerText = planName;
+                        formMembershipId.value = planId;
+                        bookingModal.classList.add('active');
+                    } else {
+                        // Join now navigation button click inside header/navbar
+                        selectedPlanLabel.innerText = "Monthly Plan";
+                        formMembershipId.value = "2";
+                        bookingModal.classList.add('active');
+                    }
                 }
             });
 
@@ -2220,7 +2264,10 @@
                     document.getElementById('signupForm').reset();
                     
                     // Route state execution engine seamlessly without full reloads
-                    loadMemberDashboardData(userEmail);
+                    await loadMemberDashboardData(userEmail);
+                    
+                    // Smoothly scroll to the new dashboard
+                    document.getElementById('membership').scrollIntoView({ behavior: 'smooth' });
                     
                 } catch (error) {
                     console.error("Supabase Save Error Details:", error);
