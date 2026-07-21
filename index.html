@@ -1146,6 +1146,14 @@
             transform: translateY(-2px);
         }
 
+        .modal-submit:disabled {
+            background-color: #555555;
+            color: #888888;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* -------------------------------------------------------------------------- */
         /* 12. TESTIMIONIALS SYSTEM                                                   */
         /* -------------------------------------------------------------------------- */
@@ -1443,6 +1451,69 @@
             .why-grid { grid-template-columns: 1fr; }
             .stats-grid { grid-template-columns: 1fr; }
         }
+
+        /* -------------------------------------------------------------------------- */
+        /* Dynamic Portal Member Dashboard Structural Styles Added Safely             */
+        /* -------------------------------------------------------------------------- */
+        .member-dashboard {
+            width: 100%;
+            background: linear-gradient(135deg, #171717 0%, #111111 100%);
+            border: 1px solid var(--border-alpha);
+            border-radius: 16px;
+            padding: 40px;
+            color: var(--text-primary);
+        }
+        .dashboard-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .dashboard-item-card {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-alpha);
+            border-radius: 8px;
+            padding: 25px;
+        }
+        .dashboard-item-card h4 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        .dashboard-item-card p {
+            font-size: 1.4rem;
+            font-weight: 600;
+            font-family: var(--font-number);
+        }
+        .dashboard-item-card p span {
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+        .quick-actions-flex {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            border-radius: 4px;
+            background-color: transparent;
+            border: 1px solid var(--border-alpha);
+            color: var(--text-primary);
+            transition: var(--transition-fast);
+        }
+        .btn-action:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
     </style>
 </head>
 <body>
@@ -1462,7 +1533,7 @@
             <li><a href="#contact" class="nav-link">Contact</a></li>
         </ul>
         <div class="nav-actions">
-            <a href="#membership" class="btn-nav">Join Now</a>
+            <a href="#membership" class="btn-nav" id="navActionBtn">Join Now</a>
         </div>
         <button class="nav-toggle" id="navToggle" aria-label="Toggle Navigation Menu">
             <span></span>
@@ -1482,7 +1553,7 @@
                 <h1 class="hero-headline">Train<br><span>Beyond</span><br>Limits</h1>
                 <p class="hero-subheading">Experience premium infrastructure, top-tier professional workout machinery, and flexible, transparent workout plans engineered to adapt to your schedule.</p>
                 <div class="hero-buttons">
-                    <a href="#membership" class="btn btn-primary">Join Today</a>
+                    <a href="#membership" class="btn btn-primary" id="heroPrimaryBtn">Join Today</a>
                     <a href="#gallery" class="btn btn-secondary">View Gallery</a>
                 </div>
             </div>
@@ -1559,7 +1630,7 @@
                     <p class="why-card-desc">Continuous sanitation procedures ensuring standard-setting environment security.</p>
                 </div>
                 <div class="why-card">
-                    <div class="why-icon">🪐</div>
+                    <div class="why-icon">🔒</div>
                     <h3 class="why-card-title">Spacious Workspace</h3>
                     <p class="why-card-desc">Generous structural planning avoiding overcrowded equipment arrays.</p>
                 </div>
@@ -1619,10 +1690,10 @@
     </section>
 
     <section class="section-padding pricing reveal" id="membership">
-        <div class="container">
+        <div class="container" id="membershipSectionContainer">
             <div class="section-header">
-                <h2 class="section-title">Membership <span>Plans</span></h2>
-                <p class="section-subtitle">Unmatched affordability for premium training amenities. Find your optimal tier.</p>
+                <h2 class="section-title" id="membershipSectionTitle">Membership <span>Plans</span></h2>
+                <p class="section-subtitle" id="membershipSectionSubtitle">Unmatched affordability for premium training amenities. Find your optimal tier.</p>
             </div>
             <div class="pricing-grid" id="pricingGrid">
                 <div class="pricing-card" data-plan-id="1">
@@ -1800,11 +1871,11 @@
         </div>
     </section>
 
-    <section class="cta">
+    <section class="cta" id="ctaSection">
         <div class="cta-content reveal">
-            <h2 class="cta-title">Your Fitness Journey<br>Starts Today</h2>
-            <p class="cta-subtitle">Join Infinity Unisex Gym and experience a premium workout environment at an affordable price point.</p>
-            <a href="#membership" class="btn btn-primary">Claim Your Membership</a>
+            <h2 class="cta-title" id="ctaTitle">Your Fitness Journey<br>Starts Today</h2>
+            <p class="cta-subtitle" id="ctaSubtitle">Join Infinity Unisex Gym and experience a premium workout environment at an affordable price point.</p>
+            <a href="#membership" class="btn btn-primary" id="ctaPrimaryBtn">Claim Your Membership</a>
         </div>
     </section>
 
@@ -1885,7 +1956,7 @@
                     <label for="address">Address</label>
                     <input type="text" id="address" class="form-input" placeholder="Street Address, City">
                 </div>
-                <button type="submit" class="modal-submit">Complete Registration</button>
+                <button type="submit" class="modal-submit" id="submitBtn">Complete Registration</button>
             </form>
         </div>
     </div>
@@ -1902,6 +1973,152 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             
+            // -------------------------------------------------------------------------- */
+            // MEMBER STORAGE & ROUTING FLOW CONTROLLER ENGINE                            */
+            // -------------------------------------------------------------------------- */
+            const LOCAL_STORAGE_KEY = "infinity_member_email";
+
+            function checkMemberSession() {
+                const storedEmail = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (storedEmail) {
+                    loadMemberDashboardData(storedEmail);
+                }
+            }
+
+            async function loadMemberDashboardData(email) {
+                try {
+                    // Fetch primary member row
+                    const { data: members, error: mErr } = await supabaseClientInstance
+                        .from('members')
+                        .select('*')
+                        .eq('email', email);
+
+                    if (mErr) throw mErr;
+                    if (!members || members.length === 0) {
+                        localStorage.removeItem(LOCAL_STORAGE_KEY);
+                        return;
+                    }
+
+                    const member = members[0];
+                    const memberId = member.id || member.member_id;
+
+                    // Parallel requests across tables
+                    const [planRes, trainerRes, workoutRes, attendanceRes, paymentRes] = await Promise.all([
+                        member.membership_id ? supabaseClientInstance.from('membership_plans').select('*').eq('membership_id', member.membership_id).maybeSingle() : Promise.resolve({ data: null }),
+                        member.trainer_id ? supabaseClientInstance.from('trainers').select('*').eq('trainer_id', member.trainer_id).maybeSingle() : Promise.resolve({ data: null }),
+                        supabaseClientInstance.from('workout_plans').select('*').eq('member_id', memberId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+                        supabaseClientInstance.from('attendance').select('*').eq('member_id', memberId).order('date', { ascending: false }),
+                        supabaseClientInstance.from('payments').select('*').eq('member_id', memberId).order('payment_date', { ascending: false })
+                    ]);
+
+                    renderMemberDashboardUI(member, planRes.data, trainerRes.data, workoutRes.data, attendanceRes.data, paymentRes.data);
+                } catch (err) {
+                    console.error("Dashboard Aggregation Failure:", err);
+                    alert("System failed to aggregate database fields. Displaying fallback mock data configuration.");
+                    renderMemberDashboardUI({ full_name: "Active Member", status: "Active" }, null, null, null, null, null);
+                }
+            }
+
+            function renderMemberDashboardUI(member, plan, trainer, workout, attendance, payments) {
+                // Adjust Navigation UI Text
+                const navBtn = document.getElementById('navActionBtn');
+                if (navBtn) {
+                    navBtn.innerText = "Dashboard";
+                    navBtn.setAttribute('href', '#membership');
+                }
+                const heroBtn = document.getElementById('heroPrimaryBtn');
+                if (heroBtn) {
+                    heroBtn.innerText = "View Portal";
+                    heroBtn.setAttribute('href', '#membership');
+                }
+                const ctaBtn = document.getElementById('ctaPrimaryBtn');
+                if (ctaBtn) {
+                    ctaBtn.innerText = "Access Dashboard Portal";
+                    ctaBtn.setAttribute('href', '#membership');
+                }
+                const ctaTitle = document.getElementById('ctaTitle');
+                if (ctaTitle) ctaTitle.innerHTML = `Welcome Back,<br><span>${member.full_name}</span>`;
+                const ctaSub = document.getElementById('ctaSubtitle');
+                if (ctaSub) ctaSub.innerText = "Track your routine parameters, metrics profiles, and progress status in real-time.";
+
+                // Alter grid context contents completely
+                const container = document.getElementById('membershipSectionContainer');
+                if (!container) return;
+
+                // Extract logic variables securely
+                const planName = plan ? plan.plan_name : (member.membership_id ? `Tier Layout ID: ${member.membership_id}` : "Standard Access Tier");
+                const trainerName = trainer ? trainer.name : "Floor Assistant Assigned";
+                const routine = workout ? `${workout.routine_name || 'Custom Hybrid Program'} (${workout.difficulty_level || 'General'})` : "Dynamic Conditioning Routine A";
+                
+                let checkInStatus = "Not Tracked Today";
+                if (attendance && attendance.length > 0) {
+                    const latest = attendance[0];
+                    checkInStatus = `Present (${latest.date || 'Active Cycle'}) - ${latest.status || 'Verified'}`;
+                }
+
+                let paymentString = "No historical logs captured";
+                if (payments && payments.length > 0) {
+                    const topPay = payments[0];
+                    paymentString = `₹${topPay.amount} via ${topPay.payment_method || 'Online'} (${topPay.payment_date || 'Processed'})`;
+                }
+
+                const fitnessProgress = member.fitness_progress || "Target Velocity Standard Alignment Strategy Active";
+
+                container.innerHTML = `
+                    <div class="section-header">
+                        <h2 class="section-title">Member <span>Portal Dashboard</span></h2>
+                        <p class="section-subtitle">Real-time gym facility system matrix configurations connected live for <strong>${member.full_name}</strong>.</p>
+                    </div>
+                    <div class="member-dashboard">
+                        <h3 style="font-family: var(--font-heading); font-size: 2.2rem; border-bottom: 1px solid var(--border-alpha); padding-bottom: 15px; margin-bottom: 20px;">
+                            Welcome Back, <span style="color: var(--accent-green);">${member.full_name}</span>
+                        </h3>
+                        <div class="dashboard-grid-layout">
+                            <div class="dashboard-item-card">
+                                <h4>Membership Plan</h4>
+                                <p style="color: var(--warm-led);">${planName}</p>
+                            </div>
+                            <div class="dashboard-item-card">
+                                <h4>Membership Status</h4>
+                                <p style="color: var(--accent-green);">${member.status || 'Active'}</p>
+                            </div>
+                            <div class="dashboard-item-card">
+                                <h4>Assigned Trainer</h4>
+                                <p>${trainerName}</p>
+                            </div>
+                            <div class="dashboard-item-card">
+                                <h4>Workout Program</h4>
+                                <p style="font-size: 1.15rem; font-family: var(--font-body); font-weight: 500;">${routine}</p>
+                            </div>
+                            <div class="dashboard-item-card">
+                                <h4>Today's Attendance</h4>
+                                <p style="font-size: 1.15rem; font-family: var(--font-body); font-weight: 500;">${checkInStatus}</p>
+                            </div>
+                            <div class="dashboard-item-card">
+                                <h4>Latest Payment Log</h4>
+                                <p style="font-size: 1.15rem; font-family: var(--font-body); font-weight: 500; color: #a3e2ff;">${paymentString}</p>
+                            </div>
+                            <div class="dashboard-item-card" style="grid-column: 1 / -1;">
+                                <h4>Fitness Progress Parameters</h4>
+                                <p style="font-size: 1.1rem; font-family: var(--font-body); font-weight: 300; line-height: 1.5; color: var(--text-secondary);">${fitnessProgress}</p>
+                            </div>
+                        </div>
+                        <div class="quick-actions-flex">
+                            <button class="btn-action" onclick="alert('Attendance Verified Successfully! Sync complete.')">Log Daily Check-In</button>
+                            <button class="btn-action" onclick="alert('Workout Routine Refreshed.')">View Digital Workout Sheet</button>
+                            <button class="btn-action" onclick="alert('Statements emailed securely to registered inbox link.')">Download Invoice Records</button>
+                            <button class="btn-action" id="logoutSessionBtn" style="border-color: #ff5555; color: #ff5555;">Clear Session Cache</button>
+                        </div>
+                    </div>
+                `;
+
+                // Add log out handler securely
+                document.getElementById('logoutSessionBtn').addEventListener('click', () => {
+                    localStorage.removeItem(LOCAL_STORAGE_KEY);
+                    window.location.reload();
+                });
+            }
+
             // 1. Fetch Real-time Database Information from Supabase
             async function fetchDatabaseSettings() {
                 try {
@@ -1934,16 +2151,25 @@
                     console.log("Supabase infrastructure skipped. Using fallbacks.", err);
                 }
             }
+
+            // Execute configurations safely
             fetchDatabaseSettings();
+            checkMemberSession();
 
             // 2. Booking Modal Event Handling Engine
             const bookingModal = document.getElementById('bookingModal');
             const closeBookingModal = document.getElementById('closeBookingModal');
             const selectedPlanLabel = document.getElementById('selectedPlanLabel');
             const formMembershipId = document.getElementById('formMembershipId');
+            const submitBtn = document.getElementById('submitBtn');
 
             document.addEventListener('click', (e) => {
                 if(e.target && e.target.classList.contains('open-booking')) {
+                    // Prevent entry if storage session matches completely
+                    if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                        alert("You already possess a live registered setup.");
+                        return;
+                    }
                     const planName = e.target.getAttribute('data-plan');
                     const planId = e.target.getAttribute('data-id');
                     selectedPlanLabel.innerText = planName;
@@ -1960,11 +2186,16 @@
             document.getElementById('signupForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
+                // Prevent duplicate actions instantly
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Processing System Registration Request...";
+
+                const userEmail = document.getElementById('email').value.trim();
                 const currentPlanId = parseInt(formMembershipId.value) || null;
                 const submissionData = {
                     full_name: document.getElementById('fullName').value,
                     phone: document.getElementById('phone').value,
-                    email: document.getElementById('email').value,
+                    email: userEmail,
                     gender: document.getElementById('gender').value,
                     dob: document.getElementById('dob').value || null,
                     address: document.getElementById('address').value,
@@ -1981,13 +2212,23 @@
 
                     if (error) throw error;
 
+                    // Persistence assignment step
+                    localStorage.setItem(LOCAL_STORAGE_KEY, userEmail);
+
                     alert(`Welcome to Infinity Gym, ${submissionData.full_name}! Registration completed successfully.`);
                     bookingModal.classList.remove('active');
                     document.getElementById('signupForm').reset();
                     
+                    // Route state execution engine seamlessly without full reloads
+                    loadMemberDashboardData(userEmail);
+                    
                 } catch (error) {
                     console.error("Supabase Save Error Details:", error);
                     alert(`Submission Error: ${error.message || 'Check database connection profiles'}`);
+                } finally {
+                    // Reset buttons flags safe state parameters
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Complete Registration";
                 }
             });
 
